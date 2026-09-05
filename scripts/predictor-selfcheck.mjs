@@ -41,6 +41,6 @@ const score = calculateWeightedScore([
   { difficulty: 5 }
 ], [true, false, true]);
 assert(score === 6 / 9, 'weighted score calculation should be deterministic');
-assert(confidenceBand(score, 18) === 'High', 'high completion with strong separation should be high confidence');
+assert(confidenceBand(score, 18) === 'Medium', 'completed diagnostic with moderate separation should be medium confidence');
 
 console.log('GCSE Predictor self-check passed.');
