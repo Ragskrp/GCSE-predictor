@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { createRoot } from 'react-dom/client';
-import { ArrowLeft, ArrowRight, Bookmark, Check, Share2, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bookmark, Share2, Sparkles } from 'lucide-react';
 import './styles.css';
 
 const questions = [
@@ -44,7 +43,6 @@ function App() {
   }, [answers]);
 
   const start = () => { setIndex(0); setAnswers([]); setSelected(null); setScreen('quiz'); };
-  const choose = (i) => setSelected(i);
   const next = () => {
     if (selected === null) return;
     const nextAnswers = [...answers];
@@ -56,9 +54,9 @@ function App() {
 
   return <main className="app-shell">
     {screen === 'start' && <Start board={board} setBoard={setBoard} subject={subject} setSubject={setSubject} tier={tier} setTier={setTier} start={start} />}
-    {screen === 'quiz' && <Quiz q={questions[index]} index={index} selected={selected} choose={choose} next={next} back={() => index ? (setIndex(index - 1), setSelected(null)) : setScreen('start')} />}
-    {screen === 'result' && <Result grade={grade} percentage={percentage} confidence={confidence} weakTopics={weakTopics} share={() => setScreen('share')} />}
-    {screen === 'share' && <Share grade={grade} percentage={percentage} confidence={confidence} board={board} subject={subject} back={() => setScreen('result')} />}
+    {screen === 'quiz' && <Quiz q={questions[index]} index={index} selected={selected} choose={setSelected} next={next} board={board} subject={subject} tier={tier} back={() => index ? (setIndex(index - 1), setSelected(null)) : setScreen('start')} />}
+    {screen === 'result' && <Result grade={grade} percentage={percentage} confidence={confidence} weakTopics={weakTopics} share={() => setScreen('share')} board={board} subject={subject} tier={tier} />}
+    {screen === 'share' && <Share grade={grade} percentage={percentage} confidence={confidence} board={board} subject={subject} tier={tier} back={() => setScreen('result')} />}
   </main>;
 }
 
@@ -76,9 +74,9 @@ function Start({ board, setBoard, subject, setSubject, tier, setTier, start }) {
   </section>;
 }
 function Picker({label, values, value, setValue}) { return <div className="picker"><label>{label}</label><div>{values.map(v => <button key={v} className={value === v ? 'selected' : ''} onClick={() => setValue(v)}>{v}</button>)}</div></div>; }
-function Quiz({ q, index, selected, choose, next, back }) {
+function Quiz({ q, index, selected, choose, next, back, board, subject, tier }) {
   return <section className="screen quiz-screen">
-    <header className="quiz-header"><button className="icon-btn" onClick={back}><ArrowLeft/></button><span>Maths&nbsp; • &nbsp;AQA&nbsp; • &nbsp;Higher</span><button className="text-btn" onClick={() => back()}>Exit</button></header>
+    <header className="quiz-header"><button className="icon-btn" onClick={back}><ArrowLeft/></button><span>{subject}&nbsp; • &nbsp;{board}&nbsp; • &nbsp;{tier}</span><button className="text-btn" onClick={() => back()}>Exit</button></header>
     <div className="progress"><div style={{width: `${((index + 1) / questions.length) * 100}%`}} /></div>
     <div className="question-meta"><span>Question {index + 1} of {questions.length}</span><Bookmark size={18}/></div>
     <span className="topic-tag">{q.topic}</span>
@@ -87,11 +85,18 @@ function Quiz({ q, index, selected, choose, next, back }) {
     <button className="primary bottom" disabled={selected === null} onClick={next}>{index === questions.length - 1 ? 'Reveal my grade' : 'Next'} <ArrowRight size={18}/></button>
   </section>;
 }
-function Result({grade, percentage, confidence, weakTopics, share}) {
-  return <section className="screen result-screen"><header><Logo/><button className="icon-btn"><Share2/></button></header><div className="result-title">Your estimated grade</div><div className="grade-wrap"><div className="orbit"/><div className="grade">{grade}</div></div><div className="solid">SOLID {grade}</div><p className="disclaimer">Based on your performance in this diagnostic. This is a practice-based estimate, not an official grade.</p><div className="stats"><Stat value={`${percentage}%`} label="Questions correct"/><Stat value={confidence} label="Confidence in this grade"/><Stat value={questions.length} label="Questions completed"/></div><button className="primary" onClick={share}><Share2 size={18}/> Share Your Result</button><button className="secondary" onClick={() => {}}>View Topic Breakdown</button>{weakTopics.length > 0 && <div className="weak"><span>Focus next</span>{weakTopics.map(t => <b key={t}>{t}</b>)}</div>}</section>;
+function Result({grade, percentage, confidence, weakTopics, share, board, subject, tier}) {
+  return <section className="screen result-screen"><header><Logo/><button className="icon-btn" onClick={share} aria-label="Share result"><Share2/></button></header><div className="result-title">Your estimated grade</div><div className="grade-wrap"><div className="orbit"/><div className="grade">{grade}</div></div><div className="solid">SOLID {grade}</div><p className="disclaimer">Based on your performance in this diagnostic. This is a practice-based estimate, not an official grade.</p><div className="stats"><Stat value={`${percentage}%`} label="Questions correct"/><Stat value={confidence} label="Confidence in this grade"/><Stat value={questions.length} label="Questions completed"/></div><button className="primary" onClick={share}><Share2 size={18}/> Share Your Result</button><button className="secondary" onClick={() => document.getElementById('breakdown')?.scrollIntoView({behavior:'smooth'})}>View Topic Breakdown</button>{weakTopics.length > 0 && <div id="breakdown" className="weak"><span>Focus next</span>{weakTopics.map(t => <b key={t}>{t}</b>)}</div>}<div className="result-context">{board} · {subject} · {tier}</div></section>;
 }
 function Stat({value,label}) { return <div className="stat"><strong>{value}</strong><span>{label}</span></div>; }
-function Share({grade, percentage, confidence, board, subject, back}) { return <section className="screen share-screen"><header className="quiz-header"><button className="icon-btn" onClick={back}><ArrowLeft/></button><strong>Share Your Result</strong><span/></header><div className="share-tabs"><span className="active">Share Card</span><span>Copy Link</span></div><div className="share-card"><div className="card-logo">GCSE <Sparkles size={12}/><br/><strong>Predictor</strong></div><p>I got a</p><div className="card-grade">{grade}</div><h3>in GCSE {subject}</h3><span>{board} • Higher</span><div className="card-stats"><b>{percentage}%<small>questions correct</small></b><b>{confidence}<small>confidence</small></b></div><div className="card-bottom">How will you do?<br/><small>Try it now · gcsepredictor.app/abc123</small><div className="qr">▦</div></div></div><div className="share-actions"><button onClick={() => navigator.share?.({title:'My GCSE grade prediction', text:`I got a ${grade} in GCSE ${subject}!`})}>Share</button><button>Copy link</button></div><div className="share-label">Snapchat first · 9:16 share card</div></section>;
+function Share({grade, percentage, confidence, board, subject, tier, back}) {
+  const link = 'https://gcsepredictor.app/abc123';
+  const share = async () => {
+    if (navigator.share) await navigator.share({title:'My GCSE grade prediction', text:`I got a ${grade} in GCSE ${subject}!`, url:link});
+    else await navigator.clipboard?.writeText(link);
+  };
+  const copy = async () => { await navigator.clipboard?.writeText(link); };
+  return <section className="screen share-screen"><header className="quiz-header"><button className="icon-btn" onClick={back}><ArrowLeft/></button><strong>Share Your Result</strong><span/></header><div className="share-tabs"><span className="active">Share Card</span><button onClick={copy}>Copy Link</button></div><div className="share-card"><div className="card-logo">GCSE <Sparkles size={12}/><br/><strong>Predictor</strong></div><p>I got a</p><div className="card-grade">{grade}</div><h3>in GCSE {subject}</h3><span>{board} • {tier}</span><div className="card-stats"><b>{percentage}%<small>questions correct</small></b><b>{confidence}<small>confidence</small></b></div><div className="card-bottom">How will you do?<br/><small>Try it now · gcsepredictor.app/abc123</small><div className="qr">▦</div></div></div><div className="share-actions"><button onClick={share}>Share</button><button onClick={copy}>Copy link</button></div><div className="share-label">Snapchat first · 9:16 share card</div></section>;
 }
 
 createRoot(document.getElementById('root')).render(<App />);
