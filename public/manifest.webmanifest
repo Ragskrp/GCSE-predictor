@@ -1,0 +1,9 @@
+{
+  "name": "GCSE Grade Predictor",
+  "short_name": "GCSE Predictor",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080a0f",
+  "theme_color": "#0b0d12",
+  "description": "Practice-based GCSE grade estimates for AQA and Edexcel Maths and Combined Science."
+}
