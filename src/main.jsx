@@ -12,6 +12,7 @@ function App() {
   const [tier, setTier] = useState('Higher');
   const [pool, setPool] = useState([]);
   const [current, setCurrent] = useState(null);
+  const [usedIds, setUsedIds] = useState(new Set());
   const [difficulty, setDifficulty] = useState(START_DIFFICULTY);
   const [answers, setAnswers] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -27,6 +28,7 @@ function App() {
     const first = selectNextQuestion(available, new Set(), START_DIFFICULTY);
     setPool(available);
     setCurrent(first);
+    setUsedIds(new Set(first ? [first.id] : []));
     setDifficulty(START_DIFFICULTY);
     setAnswers([]);
     setSelected(null);
@@ -37,8 +39,8 @@ function App() {
     if (selected === null || !current) return;
     const correct = selected === current.answer;
     const nextAnswers = [...answers, correct];
-    const usedIds = new Set([...pool.slice(0, answers.length).map(q => q.id), current.id]);
     const newDifficulty = nextDifficulty(difficulty, correct);
+    const nextUsed = new Set(usedIds);
     setAnswers(nextAnswers);
     setDifficulty(newDifficulty);
     setSelected(null);
@@ -48,9 +50,14 @@ function App() {
       return;
     }
 
-    const next = selectNextQuestion(pool, usedIds, newDifficulty);
-    if (next) setCurrent(next);
-    else setScreen('result');
+    const next = selectNextQuestion(pool, nextUsed, newDifficulty);
+    if (next) {
+      nextUsed.add(next.id);
+      setUsedIds(nextUsed);
+      setCurrent(next);
+    } else {
+      setScreen('result');
+    }
   };
 
   return <main className="app-shell">
